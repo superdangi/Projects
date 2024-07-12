@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+	environment{
+		SONAR_HOME = tool "Sonar"
+	} 
+    stages {
+        stage("Code Checkout") {
+            steps {
+                git url: "https://github.com/LondheShubham153/node-todo-cicd.git", branch: "master"
+				echo "code cloned successfully"
+            }
+        }
+        stage("SonarQube Analysis") {
+            steps {
+                withSonarQubeEnv("Sonar"){
+					sh "${SONAR_HOME}/bin/sonar-scanner -Dsonar.projectName=nodetodo -Dsonar.projectKey=nodetodoapp -X"
+				}
+            }
+        }
+        stage("SonarQube Quality Gates") {
+            steps {
+                timeout(time: 1, unit: "MINUTES"){
+					waitForQualityGate abortPipeline: false
+				}
+            }
+        }
+        stage("OWASP Dependency Check") {
+            steps {
+				dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'OWASP'
+				dependencyCheckPublisher pattern: '**/dependency-check-report.xml'              
+            }
+        }
+        stage("Build & Test"){
+            steps{
+                sh 'docker build -t node-app-batch-6:latest .'
+                echo "Code Built Successfully"
+            }
+        }
+        stage("Trivy") {
+            steps {
+                sh "trivy image node-app-batch-6"
+            }
+        }
+        stage("Push to Docker Hub Repository") {
+            steps {
+             withCredentials([usernamePassword(credentialsId:"DockerHubCreds",passwordVariable:"dockerpass",usernameVariable:"dockeruser")]){
+                sh "docker login -u ${env.dockeruser} -p ${env.dockerpass}" 
+                sh "docker tag node-app-batch-6:latest ${env.dockeruser}/node-app-batch-6:latest"
+                sh "docker push ${env.dockeruser}/node-app-batch-6:latest"
+                }
+            }
+        }
+        stage("Deploy"){
+            steps{
+                sh "docker-compose up -d"
+                echo "App Deployed Successfully"
+            }
+        }
+    }
+}
