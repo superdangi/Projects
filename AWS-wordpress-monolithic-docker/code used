@@ -17,7 +17,7 @@ systemctl status docker
 Docker-compose —-version
 sudo usermod -aG docker $USER
 
-Starting Docker Containers
+# Starting Docker Containers
 sudo docker-compose up -d
 sudo docker ps
 
