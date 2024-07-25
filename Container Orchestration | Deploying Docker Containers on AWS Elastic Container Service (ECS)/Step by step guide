@@ -1,0 +1,82 @@
+Reference : https://youtu.be/AiiFbsAlLaI?si=CAnA4RLNRP8fJ21Z
+
+# Preparing the lab
+
+1. Launch an ec2 instance
+
+2. SSH into it
+
+3. install docker
+
+#installing docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo systemctl restart docker
+
+4. install aws cli
+
+sudo apt update
+sudo apt install unzip curl -y
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+
+5. clone the repo: https://github.com/piyushgarg-dev/nodejs-docker-example.git
+and from the file : src/routes/router.ts , remove this line "throw new Error("Internal Server Error");"
+
+6. congfigure aws cli
+
+7. create a repository in ECR
+
+8. reboot the system
+
+9. follow the push commands
+
+# ECS
+
+10. open ECS > create a cluster > aws fargate 
+
+11. Go to "task-defination" > "create new task-defination" > enter name > aws fargate > Linux/X86_64 >
+1 cpu, 3gb memory >
+
+12. enter the name and image uri
+
+13. enter 8000 in container port
+
+14. in healthcheck Command:
+CMD-SHELL, curl -f http://localhost:8000/health || exit 1
+
+15. submit
+
+16. go to cluster > service
+
+17. in Compute options > capacity provider strategy
+
+18. application type : service
+
+19. in Family, choose the task you created previously, enter the service name
+
+20. load balancing> ALB> create new> enter name > enter the health check path
+
+21. service auto scaling > enter min and max number of tasks > target tracking> enter policy name > select ecs service metric 
+
+22. create/submit
+
+23. access the application via ALB
+
+# rolling update feature
+
+24. change the code > build the image > push to ECR
+
+25. go to service > update service > force new deployment > update
+
+# clean up
+
+26. Go to service > update > desired tasks=0 > force new deployment > auto scaling=0> update
+
+27. wait till task = 0
+
+28. now delete service > delete the cluster
+
+29. delete the ECR
